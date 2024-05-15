@@ -17,6 +17,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,18 +42,15 @@ public class MainActivity extends AppCompatActivity {
     BluetoothDevice bluetoothDevice;
     BluetoothSocket bluetoothSocket;
     OutputStream outputStream;
-    InputStream inputStream;
+    InputStream inputStream=null;
     TextView textView;
+    Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;});
         //------------------------------------------------------------------------------------
         txtRed = findViewById(R.id.txtRed);
         txtGreen = findViewById(R.id.txtGreen);
@@ -63,12 +61,17 @@ public class MainActivity extends AppCompatActivity {
         BLUE = findViewById(R.id.BLUE);
 
         textView=findViewById(R.id.setTextId);
+        button = findViewById(R.id.buttonId);
 //===================================================================
 
 
-
-
-
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent=new Intent(MainActivity.this, videoRecorderActivity.class);
+                startActivity(intent);
+            }
+        });
 
 
 
@@ -106,36 +109,31 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                 }
+                //                    bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
+//                    bluetoothAdapter.cancelDiscovery();
+//                    bluetoothSocket.connect();
+//                    outputStream = bluetoothSocket.getOutputStream();
+//                    inputStream=bluetoothSocket.getInputStream();
+                //============================================
                 try {
                     bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
                     bluetoothAdapter.cancelDiscovery();
                     bluetoothSocket.connect();
                     outputStream = bluetoothSocket.getOutputStream();
                     inputStream=bluetoothSocket.getInputStream();
-                    //============================================
+
+                    // Add the code for reading from inputStream and processing it here
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Error connecting to Bluetooth device: " + e.getMessage());
+                    Toast.makeText(MainActivity.this, "Error connecting to Bluetooth device", Toast.LENGTH_SHORT).show();
+                }
 
 
-                    //================================================================================
-//                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-//
-//                    try {
-//                        String line;
-//                        while((line = reader.readLine()) != null) {
-//                            // Process the received string value
-//                            // For example, you can display it on the UI, log it, or perform any other action
-////                            Log.d("hc05", line);
-//                            textView.setText(textView.getText().toString()+"\n"+line);
-//                            if(line.equals("1_11")){
-//                                Intent intent=new Intent(MainActivity.this,videoRecorderActivity.class);
-//                                intent.putExtra("1_1","1_1");
-//                                startActivity(intent);
-//                                textView.setText("got 1-1");
-//                            }
-//                        }
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-
+                //================================================================================
+                if(inputStream!=null)
+                {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                     final int n=50;
                     final String[] lines = new String[n]; // Circular buffer to store the last five lines
@@ -189,16 +187,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-                catch (IOException e) {
-                    Log.d("Message5", "Turn on bluetooth and restart the app");
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(MainActivity.this, "Turn on bluetooth and restart the app", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    throw new RuntimeException(e);
-                }
+
             }
         }).start();
 
@@ -209,6 +198,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 red = (int) (((float) 200 / 100) * i);
                 txtRed.setText(Integer.toString(red));
+                if(inputStream!=null)
                 sendCommand(1, red);
             }
             @Override
@@ -223,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 green = (int) (((float) 200 / 100) * i);
                 txtGreen.setText(Integer.toString(green));
+                if(inputStream!=null)
                 sendCommand(2, green);
             }
             @Override
@@ -237,6 +228,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 blue = (int) (((float) 200 / 100) * i);
                 txtBlue.setText(Integer.toString(blue));
+                if(inputStream!=null)
                 sendCommand(3, blue);
             }
             @Override
@@ -248,12 +240,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 //=========on create end===============
-
+    int flag=1;
     private void sendCommand(int LED_index, int value) {
         if (outputStream == null) {
             Log.d(TAG, "Output stream error");
-            Toast.makeText(this, "Output stream error", Toast.LENGTH_SHORT).show();
-            // return;
+            if(flag==1) {
+                Toast.makeText(this, "Output stream error", Toast.LENGTH_SHORT).show();
+                flag=0;
+            }
+            return;
         }
         try {
             String command = "";

@@ -48,20 +48,12 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_video_recorder);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(((Insets) systemBars).left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
         //----------------------//
         textView=findViewById(R.id.textViewId);
         surfaceView = findViewById(R.id.surfaceView);
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
-
-        surfaceView.setBottom(90);
-
-
 
 
 //==========================================================================
@@ -168,10 +160,8 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         }
     }
 
-//    ------------
 
     private void prepareMediaRecorder() {
-        mediaRecorder =null;
         mediaRecorder = new MediaRecorder();
         mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         mediaRecorder.setVideoSource(MediaRecorder.VideoSource.DEFAULT);
@@ -179,23 +169,14 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mediaRecorder.setOutputFile(getOutputMediaFile().toString());
-
         // Set the orientation hint to landscape
         mediaRecorder.setOrientationHint(90); // 0 for landscape
-        mediaRecorder.setMaxDuration(10000);
-        // Set the video size to 720x1280 (portrait mode)
-       // mediaRecorder.setVideoSize(540, 720);
 
-// Set the video frame rate to 30 frames per second
-       // mediaRecorder.setVideoFrameRate(90);
-
-
-
-
+        // Set the desired video size here (e.g., 720x1280)
+//      if(mediaRecorder!=null)
+        //mediaRecorder.setVideoSize(144, 176);
 
         try {
-            //mediaRecorder.setPreviewDisplay(surfaceHolder.getSurface());
-
             mediaRecorder.setPreviewDisplay(surfaceHolder.getSurface());
             mediaRecorder.prepare();
         } catch (IOException e) {
@@ -206,7 +187,24 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
 
 
 
+
+    private void stopRecording() {
+        if (mediaRecorder != null) {
+            Toast.makeText(this, "Recording stopped.", Toast.LENGTH_SHORT).show();
+            mediaRecorder.stop();
+            mediaRecorder.release();
+            mediaRecorder = null; // Release the MediaRecorder instance
+            isRecording = false;
+            textView.setText("Recording stopped");
+            recordButton.setText("Record again");
+        }
+    }
+
     private void startRecording() {
+        if (mediaRecorder == null) {
+            // Reinitialize the MediaRecorder instance
+            prepareMediaRecorder();
+        }
         if (mediaRecorder != null) {
             mediaRecorder.start();
             isRecording = true;
@@ -217,20 +215,10 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         }
     }
 
-    private void stopRecording() {
-        if (mediaRecorder != null) {
-            Toast.makeText(this, "Recording stopped.", Toast.LENGTH_SHORT).show();
-            mediaRecorder.stop();
-            mediaRecorder.release();
-            //mediaRecorder.reset();
-            isRecording = false;
-            textView.setText("Recording stoped");
-            recordButton.setText("Record again");
-        }
-        Intent intent=new Intent(videoRecorderActivity.this,MainActivity.class);
-        startActivity(intent);
-        finish();
-    }
+
+
+
+//    =================================
 
     private File getOutputMediaFile() {
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "MyVideos2");
@@ -242,7 +230,7 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         Toast.makeText(this, "Setting path...", Toast.LENGTH_SHORT).show();
         return new File(mediaStorageDir.getPath() + File.separator + "BIB2__" + System.currentTimeMillis() + "_.mp4");
     }
-//    ======
+
 
 
 }
