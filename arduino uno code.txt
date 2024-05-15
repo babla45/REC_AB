@@ -1,0 +1,127 @@
+
+String full_command = "";
+
+#define motionSensorPin 2
+#define pir_LED 4
+#define RED 9
+#define GREEN 10
+#define blue 11
+
+
+void setup() {
+
+  Serial.begin(9600);
+  pinMode(RED, OUTPUT);
+  pinMode(GREEN, OUTPUT);
+  pinMode(blue, OUTPUT);
+  pinMode(pir_LED,OUTPUT);
+  pinMode(motionSensorPin,INPUT);
+
+
+  digitalWrite(motionSensorPin, LOW);
+
+  //sensor needs some time to start working
+  Serial.println("starting");
+  Serial.print("Activating sensor ");
+  for(int i = 0; i <15; i++)
+  {
+    Serial.print("..*");
+    delay(1000);
+  }
+  Serial.println(" Done initiating\n");
+  Serial.println("PIR SENSOR IS ACTIVE\n");
+  delay(500);
+}
+
+
+
+
+void loop() {
+  if (Serial.available())
+  {
+     char c = Serial.read();
+     if (c != '\n')
+     {
+       full_command += c;
+     }
+    
+     else 
+     {
+        Serial.println(full_command);
+        setColor(full_command);
+        full_command = "";
+      }
+  }
+
+//  ----------
+
+     if(digitalRead(motionSensorPin)==HIGH)
+     {
+       digitalWrite(pir_LED, HIGH);
+       //the led visualizes the sensors output pin state
+       
+       Serial.println("---");
+//       Serial.println("1_1");
+       Serial.print("motion detected at ");
+       Serial.print(millis()/1000);
+       Serial.println(" sec");
+       Serial.println("1_1");
+       
+       delay(5000);
+     }
+     else{
+      //Serial.println(0);
+      digitalWrite(pir_LED,LOW);
+   
+     }
+
+
+//------------
+}
+
+
+void setColor(String command)
+{
+  if (command.charAt(0) == 'R')
+  {
+    //analogWrite(RED, command.substring(2).toInt());
+    int x=command.substring(2).toInt();
+    if(x>100)
+    {
+      digitalWrite(RED,HIGH);
+    }
+    else
+    {
+      digitalWrite(RED,LOW);
+    }
+  }
+  
+  if(command.charAt(0) == 'G')
+  {
+    //analogWrite(GREEN, command.substring(2).toInt());
+    int x=command.substring(2).toInt();
+    if(x>100)
+    {
+      digitalWrite(GREEN,HIGH);
+    }
+    else
+    {
+      digitalWrite(GREEN,LOW);
+    }
+  }
+
+  if(command.charAt(0) == 'B')
+  {
+    //analogWrite(BLUE, command.substring(2).toInt());
+    int x=command.substring(2).toInt();
+    if(x>100)
+    {
+      digitalWrite(blue,HIGH);
+    }
+    else
+    {
+      digitalWrite(blue,LOW);
+    }
+  }
+
+}
