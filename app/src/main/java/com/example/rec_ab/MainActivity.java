@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtRed, txtGreen, txtBlue;
     private SeekBar RED, GREEN, BLUE;
 
-    private int flag=0;
+    private int flag=1;
 
     BluetoothAdapter bluetoothAdapter;
     BluetoothDevice bluetoothDevice;
@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     InputStream inputStream=null;
     TextView textView;
     Button goNextButton, activateButton;
-    Boolean activated=false;
+    Boolean activated=true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,16 +73,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         activateButton.setOnClickListener(v -> {
-            if(activateButton.getText().equals("Activate"))
+            if(activateButton.getText().equals("Activated"))
             {
-                activated=true;
-                activateButton.setText("Activated");
-                activateButton.setTextColor(0xFF00FF00);
-            }
-            else {
                 activated=false;
                 activateButton.setText("Activate");
                 activateButton.setTextColor(0xFF000000);
+            }
+            else {
+                activated=true;
+                activateButton.setText("Activated");
+                activateButton.setTextColor(0xFF00FF00);
             }
 
         });
@@ -179,14 +179,14 @@ public class MainActivity extends AppCompatActivity {
                                                 builder.append(lines[index]).append(new StringBuilder().append("\n"));
 
 
-                                                if(flag==0 && activateButton.getText().equals("Activated"))
+                                                if(flag==1 && activateButton.getText().equals("Activated"))
                                                 {
-                                                    flag+=1;
+                                                   flag=0;
                                                     Toast.makeText(MainActivity.this, "clicked "+Integer.toString(flag), Toast.LENGTH_SHORT).show();
-                                                    if(activated==true){
+                                                   // if(activated==true){
                                                         Toast.makeText(MainActivity.this, "activated", Toast.LENGTH_SHORT).show();
                                                         goNextButton.performClick();
-                                                    }
+                                                   // }
 
                                                 }
 
@@ -310,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        flag=0;
         Toast.makeText(MainActivity.this, "on stop called", Toast.LENGTH_SHORT).show();
         ///new
     }
@@ -318,6 +317,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        flag=1;
         if (bluetoothSocket != null) {
             try {
                 bluetoothSocket.close();
