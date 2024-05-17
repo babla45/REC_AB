@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     InputStream inputStream=null;
     TextView textView;
     Button goNextButton, activateButton;
-    Boolean activate=false;
+    Boolean activated=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,17 +69,18 @@ public class MainActivity extends AppCompatActivity {
         goNextButton.setOnClickListener(v -> {
             Intent intent=new Intent(MainActivity.this, videoRecorderActivity.class);
             startActivity(intent);
+            finish();
         });
 
         activateButton.setOnClickListener(v -> {
             if(activateButton.getText().equals("Activate"))
             {
-                activate=true;
+                activated=true;
                 activateButton.setText("Activated");
                 activateButton.setTextColor(0xFF00FF00);
             }
             else {
-                activate=false;
+                activated=false;
                 activateButton.setText("Activate");
                 activateButton.setTextColor(0xFF000000);
             }
@@ -178,18 +179,13 @@ public class MainActivity extends AppCompatActivity {
                                                 builder.append(lines[index]).append(new StringBuilder().append("\n"));
 
 
-                                                if(flag==0)
+                                                if(flag==0 && activateButton.getText().equals("Activated"))
                                                 {
                                                     flag+=1;
                                                     Toast.makeText(MainActivity.this, "clicked "+Integer.toString(flag), Toast.LENGTH_SHORT).show();
-//                                                    try {
-//                                                        Toast.makeText(MainActivity.this, "sleep called", Toast.LENGTH_SHORT).show();
-//                                                        Thread.sleep(1000);
-//                                                    } catch (InterruptedException e) {
-//                                                        throw new RuntimeException(e);
-//                                                    }
-                                                    if(activate){
-                                                        finish();
+                                                    if(activated==true){
+                                                        Toast.makeText(MainActivity.this, "activated", Toast.LENGTH_SHORT).show();
+                                                        goNextButton.performClick();
                                                     }
 
                                                 }
@@ -201,16 +197,6 @@ public class MainActivity extends AppCompatActivity {
                                     }
 
                                     textView.setText(builder.toString().trim());
-
-//                                    // Check if the received line is "1_11"
-//                                    if (receivedLine.equals("===============")) {
-//
-//                                       // Intent intent = new Intent(MainActivity.this, videoRecorderActivity.class);
-//                                        //intent.putExtra("1_1", "1_1");
-//                                        //startActivity(intent);
-//                                        //textView.setText("got 1-1");
-////                                        Toast.makeText(MainActivity.this, "got it", Toast.LENGTH_SHORT).show();
-//                                    }
                                 }
                             });
                         }
@@ -324,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        flag=0;
         Toast.makeText(MainActivity.this, "on stop called", Toast.LENGTH_SHORT).show();
         ///new
     }
@@ -331,17 +318,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        goNextButton.performClick();
-//        if (bluetoothSocket != null) {
-//            try {
-//                bluetoothSocket.close();
-//                Log.d(TAG, "Connection closed");
-//                Toast.makeText(this, "Connection closed", Toast.LENGTH_SHORT).show();
-//            } catch (IOException e) {
-//                Log.d(TAG, "Error while closing the connection");
-//                Toast.makeText(this, "Error on closing connection", Toast.LENGTH_SHORT).show();
-//            }
-//        }
+        if (bluetoothSocket != null) {
+            try {
+                bluetoothSocket.close();
+                Log.d(TAG, "Connection closed");
+                Toast.makeText(this, "Connection closed", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                Log.d(TAG, "Error while closing the connection");
+                Toast.makeText(this, "Error on closing connection", Toast.LENGTH_SHORT).show();
+            }
+        }
         Toast.makeText(this, "On Destroy MainActivity", Toast.LENGTH_SHORT).show();
     }
 
