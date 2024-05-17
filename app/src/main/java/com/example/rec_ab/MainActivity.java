@@ -5,9 +5,6 @@ import android.os.Bundle;
 import java.io.*;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -38,13 +35,16 @@ public class MainActivity extends AppCompatActivity {
     private TextView txtRed, txtGreen, txtBlue;
     private SeekBar RED, GREEN, BLUE;
 
+    private int flag=0;
+
     BluetoothAdapter bluetoothAdapter;
     BluetoothDevice bluetoothDevice;
     BluetoothSocket bluetoothSocket;
     OutputStream outputStream;
     InputStream inputStream=null;
     TextView textView;
-    Button button;
+    Button goNextButton, activateButton;
+    Boolean activate=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,16 +61,29 @@ public class MainActivity extends AppCompatActivity {
         BLUE = findViewById(R.id.BLUE);
 
         textView=findViewById(R.id.setTextId);
-        button = findViewById(R.id.buttonId);
+        goNextButton = findViewById(R.id.goNextButtonId);
+        activateButton=findViewById(R.id.activateButtonId);
 //===================================================================
 
 
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent=new Intent(MainActivity.this, videoRecorderActivity.class);
-                startActivity(intent);
+        goNextButton.setOnClickListener(v -> {
+            Intent intent=new Intent(MainActivity.this, videoRecorderActivity.class);
+            startActivity(intent);
+        });
+
+        activateButton.setOnClickListener(v -> {
+            if(activateButton.getText().equals("Activate"))
+            {
+                activate=true;
+                activateButton.setText("Activated");
+                activateButton.setTextColor(0xFF00FF00);
             }
+            else {
+                activate=false;
+                activateButton.setText("Activate");
+                activateButton.setTextColor(0xFF000000);
+            }
+
         });
 
 
@@ -83,21 +96,30 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(this, "Please restart the app", Toast.LENGTH_SHORT).show();
                 return;
             }
+
         }
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+        try{
 
-        for (BluetoothDevice device : pairedDevices) {
-            System.out.println("Name->" + device.getName() + "    " + "MAC->" + device.getAddress());
-            if (device.getName().equals("BABLA_HC_05")) {
-                macAddress = device.getAddress();
-                System.out.println("MAC - > " + macAddress);
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+
+            for (BluetoothDevice device : pairedDevices) {
+                System.out.println("Name->" + device.getName() + "    " + "MAC->" + device.getAddress());
+                if (device.getName().equals("BABLA_HC_05")) {
+                    macAddress = device.getAddress();
+                    System.out.println("MAC - > " + macAddress);
+                }
             }
-        }
 
-        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        bluetoothDevice = bluetoothAdapter.getRemoteDevice(macAddress);
+            bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            bluetoothDevice = bluetoothAdapter.getRemoteDevice(macAddress);
+
+        }
+        catch (Exception e)
+        {
+            Toast.makeText(this, "exception caught", Toast.LENGTH_SHORT).show();
+        }
         // Connecting to bluetooth device in a separate thread;
         new Thread(new Runnable() {
             @Override
@@ -109,12 +131,6 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
                 }
-                //                    bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
-//                    bluetoothAdapter.cancelDiscovery();
-//                    bluetoothSocket.connect();
-//                    outputStream = bluetoothSocket.getOutputStream();
-//                    inputStream=bluetoothSocket.getInputStream();
-                //============================================
                 try {
                     bluetoothSocket = bluetoothDevice.createRfcommSocketToServiceRecord(uuid);
                     bluetoothAdapter.cancelDiscovery();
@@ -143,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
                         String line;
                         while ((line = reader.readLine()) != null) {
                             final String receivedLine = line;
-
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -155,20 +170,47 @@ public class MainActivity extends AppCompatActivity {
                                     StringBuilder builder = new StringBuilder();
                                     for (int i = n-1; i >= 0; i--) {
                                         int index = (currentIndex[0] + i) % n;
-                                        if (lines[index] != null) {
-                                            builder.append("-->  "+lines[index]).append(new StringBuilder().append("\n"));
+                                        if (lines[index] != null)
+                                        {
+                                            //when motion is detected
+                                            if (receivedLine.equals("==============="))
+                                            {
+                                                builder.append(lines[index]).append(new StringBuilder().append("\n"));
+
+
+                                                if(flag==0)
+                                                {
+                                                    flag+=1;
+                                                    Toast.makeText(MainActivity.this, "clicked "+Integer.toString(flag), Toast.LENGTH_SHORT).show();
+//                                                    try {
+//                                                        Toast.makeText(MainActivity.this, "sleep called", Toast.LENGTH_SHORT).show();
+//                                                        Thread.sleep(1000);
+//                                                    } catch (InterruptedException e) {
+//                                                        throw new RuntimeException(e);
+//                                                    }
+                                                    if(activate){
+                                                        finish();
+                                                    }
+
+                                                }
+
+                                                //else flag=1;
+                                            }
+                                            else builder.append("-->  "+lines[index]).append(new StringBuilder().append("\n"));
                                         }
                                     }
 
                                     textView.setText(builder.toString().trim());
 
-                                    // Check if the received line is "1_11"
-                                    if (receivedLine.equals("1_11")) {
-                                        Intent intent = new Intent(MainActivity.this, videoRecorderActivity.class);
-                                        intent.putExtra("1_1", "1_1");
-                                        startActivity(intent);
-                                        textView.setText("got 1-1");
-                                    }
+//                                    // Check if the received line is "1_11"
+//                                    if (receivedLine.equals("===============")) {
+//
+//                                       // Intent intent = new Intent(MainActivity.this, videoRecorderActivity.class);
+//                                        //intent.putExtra("1_1", "1_1");
+//                                        //startActivity(intent);
+//                                        //textView.setText("got 1-1");
+////                                        Toast.makeText(MainActivity.this, "got it", Toast.LENGTH_SHORT).show();
+//                                    }
                                 }
                             });
                         }
@@ -199,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
                 red = (int) (((float) 200 / 100) * i);
                 txtRed.setText(Integer.toString(red));
                 if(inputStream!=null)
-                sendCommand(1, red);
+                    sendCommand(1, red);
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -214,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
                 green = (int) (((float) 200 / 100) * i);
                 txtGreen.setText(Integer.toString(green));
                 if(inputStream!=null)
-                sendCommand(2, green);
+                    sendCommand(2, green);
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -229,7 +271,7 @@ public class MainActivity extends AppCompatActivity {
                 blue = (int) (((float) 200 / 100) * i);
                 txtBlue.setText(Integer.toString(blue));
                 if(inputStream!=null)
-                sendCommand(3, blue);
+                    sendCommand(3, blue);
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -239,14 +281,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-//=========on create end===============
-    int flag=1;
+    //=========on create end===============
+    int flag2=1;
     private void sendCommand(int LED_index, int value) {
         if (outputStream == null) {
             Log.d(TAG, "Output stream error");
-            if(flag==1) {
+            if(flag2==1) {
                 Toast.makeText(this, "Output stream error", Toast.LENGTH_SHORT).show();
-                flag=0;
+                flag2=0;
             }
             return;
         }
@@ -272,24 +314,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Toast.makeText(MainActivity.this, "on pause called", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Toast.makeText(MainActivity.this, "on stop called", Toast.LENGTH_SHORT).show();
+        ///new
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (bluetoothSocket != null) {
-            try {
-                bluetoothSocket.close();
-                Log.d(TAG, "Connection closed");
-                Toast.makeText(this, "Connection closed", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                Log.d(TAG, "Error while closing the connection");
-                Toast.makeText(this, "Error on closing connection", Toast.LENGTH_SHORT).show();
-            }
-        }
-        Toast.makeText(this, "Closing App", Toast.LENGTH_SHORT).show();
+        goNextButton.performClick();
+//        if (bluetoothSocket != null) {
+//            try {
+//                bluetoothSocket.close();
+//                Log.d(TAG, "Connection closed");
+//                Toast.makeText(this, "Connection closed", Toast.LENGTH_SHORT).show();
+//            } catch (IOException e) {
+//                Log.d(TAG, "Error while closing the connection");
+//                Toast.makeText(this, "Error on closing connection", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+        Toast.makeText(this, "On Destroy MainActivity", Toast.LENGTH_SHORT).show();
     }
 
-    public void goNextActivity(View view) {
-        Intent intent=new Intent(this,videoRecorderActivity.class);
-        startActivity(intent);
-    }
 }
