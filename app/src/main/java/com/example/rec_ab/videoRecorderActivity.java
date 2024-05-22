@@ -176,6 +176,8 @@ public class videoRecorderActivity extends AppCompatActivity implements SurfaceH
         }
     }
 
+
+
     private void startRecording() {
         if (mediaRecorder == null) {
             prepareMediaRecorder();
