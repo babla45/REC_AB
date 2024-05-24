@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.CAMERA" />
 
     <permission
         android:name="com.example.rec_ab.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -18,11 +18,7 @@
         android:name="android.hardware.camera"
         android:required="false" />
 
-
     <uses-permission android:name="android.permission.CAMERA" />
-
-
-
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -41,28 +37,30 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.REC_AB"
         tools:targetApi="31">
-
         <activity
-            android:name=".videoRecorderActivity"
+            android:name=".login_Activity"
             android:exported="true">
-        </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".videoRecorderActivity"
+            android:exported="true"></activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
 
-
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".multilineTextView"
-            android:exported="true">
-
-        </activity>
+            android:exported="true"></activity>
     </application>
 
 </manifest>
